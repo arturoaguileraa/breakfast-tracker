@@ -19,3 +19,8 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.card-border {
+  border: 2px solid #ccebf7;
+  border-radius: 8px;
+}
