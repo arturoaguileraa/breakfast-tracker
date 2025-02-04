@@ -189,7 +189,7 @@ export default function BreakfastTracker() {
             <h2 className="text-lg font-semibold">Pagos y desayunos totales</h2>
             <ul className="grid grid-cols-2 gap-4 text-center">
               {people.map((person) => (
-                <li key={person} className="bg-gray-100 p-2 rounded-lg">
+                <li key={person} className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-black dark:text-white">
                   <strong>{person}</strong>
                   <div>Pagos: {payments[person] || 0}</div>
                   <div>Desayunos: {invitations[person] || 0}</div>
@@ -198,6 +198,7 @@ export default function BreakfastTracker() {
             </ul>
           </CardContent>
         </Card>
+
 
         <Card>
           <CardContent className="p-4 space-y-2">
