@@ -50,15 +50,15 @@ export default function BreakfastTracker() {
   
 
   useEffect(() => {
-    if (!history || history.length === 0) return;
+    if (!history || history.length === 0 || selectedPeople.size === 0) return;
   
-    const payerCounts = people.map(person => ({
+    const payerCounts = Array.from(selectedPeople).map(person => ({
       person,
       ratio: (payments[person] || 0) / Math.max(1, invitations[person] || 1), // Evita división por 0
     })).sort((a, b) => a.ratio - b.ratio);
   
-    setSelectedPayer(payerCounts[0]?.person || initialPeople[0]);
-  }, [history.length, Object.keys(payments).length]);
+    setSelectedPayer(payerCounts[0]?.person || Array.from(selectedPeople)[0]);
+  }, [history.length, Object.keys(payments).length, selectedPeople]);
   
   
   
