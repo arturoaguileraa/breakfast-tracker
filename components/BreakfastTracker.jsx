@@ -5,7 +5,8 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
 import { DeleteButton } from "../components/ui/deleteButton";
-import { db, collection, getDocs, addDoc, deleteDoc, doc } from "../app/firebase.js";
+import { db, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "../app/firebase.js";
+
 
 const initialPeople = ["Roman", "Arturo", "Luis", "Sergio", "Juanma"];
 
@@ -17,6 +18,38 @@ export default function BreakfastTracker() {
   const [selectedDate, setSelectedDate] = useState("");
   const [payments, setPayments] = useState({});
   const [invitations, setInvitations] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editPayer, setEditPayer] = useState("");
+  const [editParticipants, setEditParticipants] = useState(new Set());
+
+  const startEditing = (entry) => {
+    setEditingId(entry.id);
+    setEditPayer(entry.payer);
+    setEditParticipants(new Set(entry.participants || []));
+  };
+
+  const saveEdit = async () => {
+    const updatedEntry = {
+      payer: editPayer,
+      participants: Array.from(editParticipants)
+    };
+
+    try {
+      await updateDoc(doc(db, "payments", editingId), updatedEntry);
+
+      setHistory(prev =>
+        prev.map(entry =>
+          entry.id === editingId ? { ...entry, ...updatedEntry } : entry
+        )
+      );
+
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error al guardar los cambios:", error);
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -214,16 +247,67 @@ export default function BreakfastTracker() {
               {history.length === 0 ? (
                 <li className="text-gray-500">No hay registros aún.</li>
               ) : (
-                history.map((entry, index) => (
-                  <li key={index} className="border-b py-1 flex justify-between items-center">
-                    <span>{entry.date} - <strong>{entry.payer}</strong> pagó por {entry.participants ? entry.participants.join(", ") : "(Sin datos)"}</span>
-                    <DeleteButton onClick={() => deletePayment(entry.id)} />
+                history.map((entry) => (
+                  <li key={entry.id} className="border-b py-2 flex flex-col gap-1">
+                    {editingId === entry.id ? (
+                      <div className="space-y-2">
+                        <select
+                          value={editPayer}
+                          onChange={(e) => setEditPayer(e.target.value)}
+                          className="w-full border p-1 rounded"
+                        >
+                          {people.map((p) => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                        <div className="flex flex-wrap gap-3">
+                          {people.map((p) => (
+                            <label key={p} className="flex items-center space-x-1">
+                              <input
+                                type="checkbox"
+                                checked={editParticipants.has(p)}
+                                onChange={() =>
+                                  setEditParticipants((prev) => {
+                                    const newSet = new Set(prev);
+                                    newSet.has(p) ? newSet.delete(p) : newSet.add(p);
+                                    return newSet;
+                                  })
+                                }
+                              />
+                              <span>{p}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={saveEdit}>Guardar</Button>
+                          <Button variant="outline" onClick={() => setEditingId(null)}>Cancelar</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <span
+                          onClick={() => startEditing(entry)}
+                          className="cursor-pointer hover:underline text-left"
+                        >
+                          {(() => {
+  const d = new Date(entry.date.split("/").reverse().join("-"));
+  const dia = d.toLocaleDateString("es-ES", { weekday: "long" });
+  const fecha = d.toLocaleDateString("es-ES");
+  return `${dia.charAt(0).toUpperCase() + dia.slice(1)} ${fecha}`;
+})()} -{" "}
+
+                          <strong>{entry.payer}</strong> pagó por {entry.participants?.join(", ") || "(Sin datos)"}
+                        </span>
+                        <DeleteButton onClick={() => deletePayment(entry.id, entry.payer, entry.participants)} />
+                      </div>
+                    )}
                   </li>
                 ))
               )}
             </ul>
           </CardContent>
         </Card>
+
 
       </div>
     </div>
