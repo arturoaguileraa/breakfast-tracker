@@ -7,7 +7,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { DeleteButton } from "../components/ui/deleteButton";
 import { db, collection, getDocs, addDoc, deleteDoc, doc } from "../app/firebase.js";
 
-const initialPeople = ["Roman", "Arturo", "Luis", "Sergio"];
+const initialPeople = ["Roman", "Arturo", "Luis", "Sergio", "Juanma"];
 
 export default function BreakfastTracker() {
   const [people, setPeople] = useState(initialPeople);
@@ -23,9 +23,16 @@ export default function BreakfastTracker() {
       const paymentsSnap = await getDocs(collection(db, "payments"));
       let historyData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   
-      historyData = historyData.sort((a, b) => 
-        new Date(b.date.split("/").reverse().join("-")) - new Date(a.date.split("/").reverse().join("-"))
-      );
+      historyData = historyData.sort((a, b) => {
+        const [dayA, monthA, yearA] = a.date.split("/");
+        const [dayB, monthB, yearB] = b.date.split("/");
+      
+        const dateA = new Date(parseInt(yearA), parseInt(monthA) - 1, parseInt(dayA));
+        const dateB = new Date(parseInt(yearB), parseInt(monthB) - 1, parseInt(dayB));
+      
+        return dateB - dateA;
+      });
+      
   
       setHistory(historyData);
   
